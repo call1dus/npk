@@ -1,29 +1,42 @@
 #! /bin/bash
 
 ERR=0;
+missingComponents=()
 if [[ ! -f $(which jsonnet) ]]; then
 	ERR=1;
 	echo "Error: Must have 'jsonnet' command installed.";
+	missingComponents+=("jsonnet");
 fi
 
 if [[ ! -f $(which jq) ]]; then
 	ERR=1;
 	echo "Error: Must have 'jq' command installed.";
+	missingComponents+=("jq");
 fi
 
 if [[ ! -f $(which aws) ]]; then
 	ERR=1;
 	echo "Error: Must have AWSCLI installed.";
+	missingComponents+=("awscli");
 fi
 
 if [[ ! -f $(which npm) ]]; then
 	ERR=1;
 	echo "Error: Must have NPM installed.";
+	missingComponents+=("npm");
 fi
 
 if [[ "$ERR" == "1" ]]; then
-	echo -e "\nInstall missing components, then try again.\n"
-	exit 1
+	echo -e "\nAttempting to install missing components..\n";
+	for component in ${missingComponents[@]}; do
+		apt install -y $component;
+		if [[ -f $(which ${component}) ]]; then
+			echo -e "\n${component} successfully installed.\n";
+		else
+			echo -e "\nFailed to install ${component}.\n";
+			exit 1
+		fi
+	done
 fi
 
 echo "[*] Preparing to deploy NPK."
